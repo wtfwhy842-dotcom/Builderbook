@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+  body {
+    background-color: #111827 !important;
+    color: #f9fafb !important;
+  }
+  .bg-white { background-color: #1f2937 !important; border-color: #374151 !important; }
+  .bg-gray-50 { background-color: #111827 !important; }
+  .bg-blue-50 { background-color: #1e3a8a !important; color: #bfdbfe !important; }
+  .text-gray-900, .text-gray-800 { color: #f9fafb !important; }
+  .text-gray-600, .text-gray-500, .text-gray-400 { color: #9ca3af !important; }
+  .border-gray-100, .border-gray-200 { border-color: #374151 !important; }
+  .divide-gray-50 > :not([hidden]) ~ :not([hidden]) { border-color: #374151 !important; }
+}

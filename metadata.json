@@ -1,0 +1,10 @@
+{
+  "name": "BuilderBooks",
+  "description": "A simple, mobile-first bookkeeping application tailored for self-employed construction workers.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
