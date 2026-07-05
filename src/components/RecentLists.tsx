@@ -1,4 +1,4 @@
-import { mockExpenses, mockJobs } from '../data';
+import { useData } from '../context/DataContext';
 import { Receipt as ReceiptIcon, Briefcase } from 'lucide-react';
 
 const formatDate = (dateString: string) => {
@@ -7,6 +7,7 @@ const formatDate = (dateString: string) => {
 };
 
 export function RecentLists() {
+  const { expenses, jobs } = useData();
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       {/* Recent Expenses */}
@@ -16,7 +17,7 @@ export function RecentLists() {
           <button className="text-sm text-blue-600 font-medium hover:underline">View All</button>
         </div>
         <div className="space-y-4">
-          {mockExpenses.slice(0, 4).map((expense) => (
+          {expenses.slice(0, 4).map((expense) => (
             <div key={expense.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-500">
@@ -40,7 +41,7 @@ export function RecentLists() {
           <button className="text-sm text-blue-600 font-medium hover:underline">View All</button>
         </div>
         <div className="space-y-4">
-          {mockJobs.filter(j => j.status === 'Open').slice(0, 4).map((job) => (
+          {jobs.filter(j => j.status === 'Open').slice(0, 4).map((job) => (
             <div key={job.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">

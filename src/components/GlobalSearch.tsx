@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Briefcase, Receipt, FileText, ArrowRight } from 'lucide-react';
-import { mockJobs, mockExpenses, mockIncome, mockReceipts } from '../data';
+import { useData } from '../context/DataContext';
 import { ViewState } from './Layout';
 
 export function GlobalSearch({ isOpen, onClose, onNavigate }: { isOpen: boolean; onClose: () => void; onNavigate: (view: ViewState) => void }) {
+  const { jobs, expenses, income, receipts } = useData();
   const [query, setQuery] = useState('');
 
   // close on escape
@@ -22,7 +23,7 @@ export function GlobalSearch({ isOpen, onClose, onNavigate }: { isOpen: boolean;
 
   if (query.trim().length > 0) {
     // Search Jobs
-    mockJobs.forEach(job => {
+    jobs.forEach(job => {
       if (job.customerName.toLowerCase().includes(lowerQuery) || 
           (job.address && job.address.toLowerCase().includes(lowerQuery)) ||
           (job.notes && job.notes.toLowerCase().includes(lowerQuery))) {
@@ -31,7 +32,7 @@ export function GlobalSearch({ isOpen, onClose, onNavigate }: { isOpen: boolean;
     });
 
     // Search Expenses
-    mockExpenses.forEach(exp => {
+    expenses.forEach(exp => {
       if (exp.supplier.toLowerCase().includes(lowerQuery) ||
           exp.category.toLowerCase().includes(lowerQuery) ||
           (exp.notes && exp.notes.toLowerCase().includes(lowerQuery))) {
@@ -40,14 +41,14 @@ export function GlobalSearch({ isOpen, onClose, onNavigate }: { isOpen: boolean;
     });
 
     // Search Receipts (OCR)
-    mockReceipts.forEach(rec => {
+    receipts.forEach(rec => {
       if (rec.ocrText && rec.ocrText.toLowerCase().includes(lowerQuery)) {
         results.push({ type: 'receipt', id: rec.id, title: `Receipt ${rec.id.split('-')[1]}`, subtitle: 'Receipt (OCR Match)', icon: <Receipt size={18} />, view: 'receipts' });
       }
     });
 
     // Search Income
-    mockIncome.forEach(inc => {
+    income.forEach(inc => {
       if (inc.customerName.toLowerCase().includes(lowerQuery) ||
           (inc.invoiceNumber && inc.invoiceNumber.toLowerCase().includes(lowerQuery))) {
         results.push({ type: 'income', id: inc.id, title: `${inc.invoiceNumber || 'Draft'} - ${inc.customerName}`, subtitle: 'Invoice', icon: <FileText size={18} />, view: 'invoices' });

@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "Job": {
+      "title": "Job",
+      "description": "A job/project",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "address": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "customerName", "status"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "An expense record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "vat": { "type": "number" },
+        "supplier": { "type": "string" },
+        "category": { "type": "string" },
+        "paymentMethod": { "type": "string" }
+      },
+      "required": ["userId", "amount", "supplier", "category"]
+    },
+    "Receipt": {
+      "title": "Receipt",
+      "description": "A receipt image",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "uploadDate": { "type": "string" }
+      },
+      "required": ["userId"]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "An income record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" }
+      },
+      "required": ["userId", "amount"]
+    }
+  },
+  "firestore": {
+    "/jobs/{jobId}": {
+      "schema": "Job",
+      "description": "Stores user jobs"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Stores user expenses"
+    },
+    "/receipts/{receiptId}": {
+      "schema": "Receipt",
+      "description": "Stores user receipts"
+    },
+    "/income/{incomeId}": {
+      "schema": "Income",
+      "description": "Stores user income"
+    }
+  }
+}

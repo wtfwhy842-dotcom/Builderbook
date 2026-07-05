@@ -1,19 +1,37 @@
 import React, { useState } from 'react';
 import { Layout, ViewState } from './Layout';
-import { mockJobs, mockExpenses, mockIncome, mockReceipts } from '../data';
+import { useData } from '../context/DataContext';
 import { Job, Expense, Income } from '../types';
 import { Briefcase, Search, PlusCircle, ArrowRight, Clock, CheckCircle, ChevronRight } from 'lucide-react';
 import { JobDetails } from './JobDetails';
 
 export function JobManager({ onAddExpense, onNavigate }: { onAddExpense?: () => void; onNavigate?: (view: ViewState) => void }) {
+  const { jobs, income, expenses, addJob } = useData();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [search, setSearch] = useState('');
+  const [showNewJob, setShowNewJob] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newAddress, setNewAddress] = useState('');
 
   if (selectedJob) {
     return <JobDetails job={selectedJob} onBack={() => setSelectedJob(null)} onAddExpense={onAddExpense} onNavigate={onNavigate} />;
   }
 
-  const filteredJobs = mockJobs.filter(j => 
+  const handleAddJob = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newCustomerName.trim()) {
+      addJob({
+        customerName: newCustomerName,
+        address: newAddress,
+        status: 'Open',
+      });
+      setShowNewJob(false);
+      setNewCustomerName('');
+      setNewAddress('');
+    }
+  };
+
+  const filteredJobs = jobs.filter(j => 
     search === '' || 
     j.customerName.toLowerCase().includes(search.toLowerCase()) || 
     (j.address && j.address.toLowerCase().includes(search.toLowerCase()))
@@ -26,10 +44,32 @@ export function JobManager({ onAddExpense, onNavigate }: { onAddExpense?: () => 
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Jobs</h1>
           <p className="text-gray-500">Manage your active and completed jobs.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm">
+        <button 
+          onClick={() => setShowNewJob(true)}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm">
           <PlusCircle size={20} /> New Job
         </button>
       </div>
+
+      {showNewJob && (
+        <form onSubmit={handleAddJob} className="bg-white p-4 sm:p-6 rounded-3xl border border-blue-100 shadow-md mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Add New Job</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+              <input required value={newCustomerName} onChange={e => setNewCustomerName(e.target.value)} className="w-full border border-gray-300 rounded-xl px-3 py-2" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input value={newAddress} onChange={e => setNewAddress(e.target.value)} className="w-full border border-gray-300 rounded-xl px-3 py-2" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setShowNewJob(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl">Save Job</button>
+          </div>
+        </form>
+      )}
 
       <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-100 shadow-sm mb-8">
         <div className="relative mb-6">
@@ -45,8 +85,8 @@ export function JobManager({ onAddExpense, onNavigate }: { onAddExpense?: () => 
 
         <div className="space-y-4">
           {filteredJobs.map(job => {
-            const jobIncome = mockIncome.filter(i => i.jobId === job.id).reduce((sum, inc) => sum + inc.amount, 0);
-            const jobExpenses = mockExpenses.filter(e => e.jobId === job.id).reduce((sum, exp) => sum + exp.amount, 0);
+            const jobIncome = income.filter(i => i.jobId === job.id).reduce((sum, inc) => sum + inc.amount, 0);
+            const jobExpenses = expenses.filter(e => e.jobId === job.id).reduce((sum, exp) => sum + exp.amount, 0);
             
             return (
               <div 

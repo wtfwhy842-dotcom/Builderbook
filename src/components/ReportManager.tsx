@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Layout, ViewState } from './Layout';
 import { BarChart3, Download, FileSpreadsheet, FileText, PieChart } from 'lucide-react';
-import { mockExpenses, mockIncome, mockJobs } from '../data';
+import { useData } from '../context/DataContext';
 
 export function ReportManager({ onAddExpense, onNavigate }: { onAddExpense?: () => void; onNavigate?: (view: ViewState) => void }) {
+  const { jobs, expenses, income } = useData();
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [reportType, setReportType] = useState<'pnl' | 'vat' | 'expense' | 'income' | 'jobs'>('pnl');
 
@@ -11,11 +12,11 @@ export function ReportManager({ onAddExpense, onNavigate }: { onAddExpense?: () 
     alert(`Exporting ${reportType} report for ${period} as ${type.toUpperCase()}`);
   };
 
-  // Mock calculations for demonstration
-  const totalIncome = mockIncome.reduce((sum, inc) => sum + inc.amount, 0);
-  const totalExpenses = mockExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const totalVatCollected = mockIncome.reduce((sum, inc) => sum + inc.vat, 0);
-  const totalVatPaid = mockExpenses.reduce((sum, exp) => sum + exp.vat, 0);
+  // Calculations
+  const totalIncome = income.reduce((sum, inc) => sum + inc.amount, 0);
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const totalVatCollected = income.reduce((sum, inc) => sum + inc.vat, 0);
+  const totalVatPaid = expenses.reduce((sum, exp) => sum + exp.vat, 0);
 
   return (
     <Layout onAddExpense={onAddExpense} onNavigate={onNavigate} currentView="reports">
@@ -154,9 +155,9 @@ export function ReportManager({ onAddExpense, onNavigate }: { onAddExpense?: () 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {mockJobs.map(job => {
-                    const inc = mockIncome.filter(i => i.jobId === job.id).reduce((sum, i) => sum + i.amount, 0);
-                    const exp = mockExpenses.filter(e => e.jobId === job.id).reduce((sum, e) => sum + e.amount, 0);
+                  {jobs.map(job => {
+                    const inc = income.filter(i => i.jobId === job.id).reduce((sum, i) => sum + i.amount, 0);
+                    const exp = expenses.filter(e => e.jobId === job.id).reduce((sum, e) => sum + e.amount, 0);
                     const prof = inc - exp;
                     return (
                       <tr key={job.id}>

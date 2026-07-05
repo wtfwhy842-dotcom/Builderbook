@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, ViewState } from './Layout';
-import { mockExpenses, mockIncome, mockReceipts } from '../data';
+import { useData } from '../context/DataContext';
 import { Job, Expense, Income } from '../types';
 import { ArrowLeft, Edit3, Image as ImageIcon, MapPin, Phone, Mail, Receipt, AlertCircle, FileText, CheckCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
@@ -8,9 +8,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, L
 const COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444'];
 
 export function JobDetails({ job, onBack, onAddExpense, onNavigate }: { job: Job; onBack: () => void; onAddExpense?: () => void; onNavigate?: (view: ViewState) => void; }) {
-  const jobIncome = mockIncome.filter(i => i.jobId === job.id);
-  const jobExpenses = mockExpenses.filter(e => e.jobId === job.id);
-  const jobReceipts = mockReceipts.filter(r => jobExpenses.some(e => e.receiptId === r.id));
+  const { income, expenses, receipts } = useData();
+  const jobIncome = income.filter(i => i.jobId === job.id);
+  const jobExpenses = expenses.filter(e => e.jobId === job.id);
+  const jobReceipts = receipts.filter(r => jobExpenses.some(e => e.receiptId === r.id));
 
   const totalIncome = jobIncome.reduce((sum, inc) => sum + inc.amount, 0);
   const totalExpenses = jobExpenses.reduce((sum, exp) => sum + exp.amount, 0);

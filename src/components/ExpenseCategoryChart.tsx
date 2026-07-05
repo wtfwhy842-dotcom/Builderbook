@@ -1,9 +1,21 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { expenseCategoryData } from '../data';
+import { useData } from '../context/DataContext';
 
 const COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
 
 export function ExpenseCategoryChart() {
+  const { expenses } = useData();
+  
+  const categoryTotals: Record<string, number> = {};
+  expenses.forEach(exp => {
+    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+  });
+  
+  const expenseCategoryData = Object.keys(categoryTotals).map(key => ({
+    name: key,
+    value: categoryTotals[key]
+  }));
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Expenses by Category</h3>

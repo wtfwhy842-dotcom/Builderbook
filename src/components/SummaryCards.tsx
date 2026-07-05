@@ -1,29 +1,44 @@
 import React from 'react';
-import { summaryData } from '../data';
+import { useData } from '../context/DataContext';
 import { ArrowDownRight, ArrowUpRight, Clock } from 'lucide-react';
 
 export function SummaryCards() {
+  const { expenses, income } = useData();
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const thisWeekStart = new Date(today);
+  thisWeekStart.setDate(today.getDate() - today.getDay());
+  
+  const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const todaySpending = expenses.filter(e => new Date(e.date) >= today).reduce((sum, e) => sum + e.amount, 0);
+  const weekSpending = expenses.filter(e => new Date(e.date) >= thisWeekStart).reduce((sum, e) => sum + e.amount, 0);
+  const monthSpending = expenses.filter(e => new Date(e.date) >= thisMonthStart).reduce((sum, e) => sum + e.amount, 0);
+  
+  const outstandingInvoices = income.filter(i => !i.paymentMethod || i.paymentMethod === 'Cheque').reduce((sum, i) => sum + i.amount, 0); // Simplified logic
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <SummaryCard 
         title="Today's Spending" 
-        amount={`£${summaryData.todaySpending.toFixed(2)}`}
+        amount={`£${todaySpending.toFixed(2)}`}
         icon={<ArrowDownRight size={18} className="text-rose-500" />}
-        trend="+12% from yesterday"
       />
       <SummaryCard 
         title="This Week" 
-        amount={`£${summaryData.weekSpending.toFixed(2)}`}
+        amount={`£${weekSpending.toFixed(2)}`}
         icon={<ArrowDownRight size={18} className="text-rose-500" />}
       />
       <SummaryCard 
         title="This Month" 
-        amount={`£${summaryData.monthSpending.toFixed(2)}`}
+        amount={`£${monthSpending.toFixed(2)}`}
         icon={<ArrowDownRight size={18} className="text-rose-500" />}
       />
       <SummaryCard 
         title="Outstanding Invoices" 
-        amount={`£${summaryData.outstandingInvoices.toFixed(2)}`}
+        amount={`£${outstandingInvoices.toFixed(2)}`}
         icon={<Clock size={18} className="text-amber-500" />}
         highlight
       />

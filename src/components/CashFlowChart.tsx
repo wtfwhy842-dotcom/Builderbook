@@ -1,7 +1,40 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { cashFlowData } from '../data';
+import { useData } from '../context/DataContext';
 
 export function CashFlowChart() {
+  const { income, expenses } = useData();
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  // Get last 6 months
+  const today = new Date();
+  const last6Months = Array.from({ length: 6 }).map((_, i) => {
+    const d = new Date(today.getFullYear(), today.getMonth() - 5 + i, 1);
+    return { 
+      monthLabel: months[d.getMonth()],
+      year: d.getFullYear(),
+      month: d.getMonth()
+    };
+  });
+
+  const cashFlowData = last6Months.map(({ monthLabel, year, month }) => {
+    const monthIncome = income
+      .filter(i => {
+        const d = new Date(i.date);
+        return d.getFullYear() === year && d.getMonth() === month;
+      })
+      .reduce((sum, i) => sum + i.amount, 0);
+
+    const monthExpense = expenses
+      .filter(e => {
+        const d = new Date(e.date);
+        return d.getFullYear() === year && d.getMonth() === month;
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    return { month: monthLabel, income: monthIncome, expense: monthExpense };
+  });
+
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-8">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Cash Flow (6 Months)</h3>

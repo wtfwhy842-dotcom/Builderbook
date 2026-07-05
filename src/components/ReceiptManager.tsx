@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Layout, ViewState } from './Layout';
-import { mockReceipts } from '../data';
+import { useData } from '../context/DataContext';
 import { Receipt } from '../types';
 import { Search, Filter, Download, Trash2, FileText, Image as ImageIcon, X } from 'lucide-react';
 
 export function ReceiptManager({ onAddExpense, onNavigate }: { onAddExpense?: () => void; onNavigate?: (view: ViewState) => void }) {
+  const { receipts, deleteReceipt } = useData();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [receipts, setReceipts] = useState<Receipt[]>(mockReceipts);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [visibleCount, setVisibleCount] = useState(10);
 
@@ -29,7 +29,7 @@ export function ReceiptManager({ onAddExpense, onNavigate }: { onAddExpense?: ()
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this receipt?')) {
-      setReceipts(receipts.filter(r => r.id !== id));
+      deleteReceipt(id);
       if (selectedReceipt?.id === id) {
         setSelectedReceipt(null);
       }

@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, Camera, Image as ImageIcon, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
-import { mockJobs } from '../data';
+import { useData } from '../context/DataContext';
+import { CameraCapture } from './CameraCapture';
 
 export function ExpenseForm({ onBack }: { onBack: () => void }) {
+  const { jobs, addExpense } = useData();
   const [receiptAttached, setReceiptAttached] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   
@@ -15,49 +17,61 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
   const [notes, setNotes] = useState<string>('');
   const [vat, setVat] = useState<string>('');
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [showCamera, setShowCamera] = useState(false);
 
+  const processImage = async (file: File) => {
     setReceiptAttached(true);
     setIsScanning(true);
 
     try {
-      // Convert to base64 for display/storage
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64String = reader.result as string;
+      const base64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
 
-        // Call OCR API
-        const response = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageBase64: base64String,
-            mimeType: file.type
-          })
-        });
+      // Call OCR API
+      const response = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: base64String,
+          mimeType: file.type
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error('OCR failed');
+      if (!response.ok) {
+        throw new Error('OCR failed');
+      }
+
+      const data = await response.json();
+      
+      // Populate form
+      if (data.amount !== undefined && data.amount !== null) setAmount(data.amount.toString());
+      if (data.supplier) setSupplier(data.supplier);
+      if (data.category) {
+        const validCategories = ["Materials", "Fuel", "Tools", "Subcontractors", "Meals", "Other"];
+        if (validCategories.includes(data.category)) {
+          setCategory(data.category);
+        } else {
+          setCategory("Other");
         }
-
-        const data = await response.json();
-        
-        // Populate form
-        if (data.amount) setAmount(data.amount.toString());
-        if (data.supplier) setSupplier(data.supplier);
-        if (data.category) setCategory(data.category);
-        if (data.vat) setVat(data.vat.toString());
-        
-        setIsScanning(false);
-      };
+      }
+      if (data.vat !== undefined && data.vat !== null) setVat(data.vat.toString());
+      
     } catch (error) {
       console.error("Error scanning receipt:", error);
       alert("Could not read receipt automatically. Please enter details manually.");
+    } finally {
       setIsScanning(false);
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processImage(file);
   };
 
   const [validationError, setValidationError] = useState('');
@@ -80,6 +94,19 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
     }
 
     setValidationError('');
+    
+    // Add the expense to context
+    addExpense({
+      date: new Date().toISOString(),
+      amount: Number(amount),
+      vat: Number(vat || 0),
+      supplier,
+      category,
+      paymentMethod: payment as any,
+      ...(jobId ? { jobId } : {}),
+      ...(notes ? { notes } : {}),
+    });
+
     // Optimistic Update Simulation
     import('../security').then(({ addAuditLog }) => {
       addAuditLog('EXPENSE_ADDED', `Added expense: £${amount} at ${supplier}`);
@@ -118,11 +145,14 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Receipt</label>
               {!receiptAttached ? (
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="flex flex-col items-center justify-center gap-2 bg-blue-50 border border-blue-100 rounded-2xl p-5 text-blue-600 active:bg-blue-100 transition-colors cursor-pointer shadow-sm">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCamera(true)}
+                    className="flex flex-col items-center justify-center gap-2 bg-blue-50 border border-blue-100 rounded-2xl p-5 text-blue-600 active:bg-blue-100 transition-colors cursor-pointer shadow-sm w-full"
+                  >
                     <Camera size={28} />
                     <span className="font-semibold">Take Photo</span>
-                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
-                  </label>
+                  </button>
                   <label className="flex flex-col items-center justify-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-5 text-gray-600 active:bg-gray-100 transition-colors cursor-pointer shadow-sm">
                     <ImageIcon size={28} />
                     <span className="font-semibold">Upload Image</span>
@@ -243,7 +273,7 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
                   className="w-full bg-white border border-gray-300 rounded-2xl px-4 py-3.5 text-gray-900 focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 outline-none appearance-none text-lg"
                 >
                   <option value="">None / General Business</option>
-                  {mockJobs.map(job => (
+                  {jobs.map(job => (
                     <option key={job.id} value={job.id}>{job.customerName}</option>
                   ))}
                 </select>
@@ -277,6 +307,16 @@ export function ExpenseForm({ onBack }: { onBack: () => void }) {
           </button>
         </div>
       </div>
+      
+      {showCamera && (
+        <CameraCapture 
+          onCapture={(file) => {
+            setShowCamera(false);
+            processImage(file);
+          }} 
+          onCancel={() => setShowCamera(false)} 
+        />
+      )}
     </div>
   );
 }

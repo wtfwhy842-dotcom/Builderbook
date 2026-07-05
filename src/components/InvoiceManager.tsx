@@ -1,12 +1,36 @@
 import React, { useState } from 'react';
 import { Layout, ViewState } from './Layout';
-import { mockIncome } from '../data';
+import { useData } from '../context/DataContext';
 import { FileText, Search, PlusCircle, ArrowRight, Download, Mail } from 'lucide-react';
 
 export function InvoiceManager({ onAddExpense, onNavigate }: { onAddExpense?: () => void; onNavigate?: (view: ViewState) => void }) {
+  const { income, jobs, addIncome } = useData();
   const [search, setSearch] = useState('');
+  const [showNewInvoice, setShowNewInvoice] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [jobId, setJobId] = useState('');
 
-  const filteredInvoices = mockIncome.filter(i => 
+  const handleAddInvoice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customerName.trim() && amount) {
+      addIncome({
+        customerName,
+        amount: Number(amount),
+        vat: Number(amount) * 0.2,
+        date: new Date().toISOString(),
+        paymentMethod: 'Bank Transfer',
+        ...(jobId ? { jobId } : {}),
+        invoiceNumber: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
+      });
+      setShowNewInvoice(false);
+      setCustomerName('');
+      setAmount('');
+      setJobId('');
+    }
+  };
+
+  const filteredInvoices = income.filter(i => 
     search === '' || 
     i.customerName.toLowerCase().includes(search.toLowerCase()) || 
     (i.invoiceNumber && i.invoiceNumber.toLowerCase().includes(search.toLowerCase()))
@@ -19,10 +43,39 @@ export function InvoiceManager({ onAddExpense, onNavigate }: { onAddExpense?: ()
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Invoices</h1>
           <p className="text-gray-500">Manage your issued invoices and payments.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm">
+        <button 
+          onClick={() => setShowNewInvoice(true)}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm">
           <PlusCircle size={20} /> New Invoice
         </button>
       </div>
+
+      {showNewInvoice && (
+        <form onSubmit={handleAddInvoice} className="bg-white p-4 sm:p-6 rounded-3xl border border-blue-100 shadow-md mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Create Invoice</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+              <input required value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full border border-gray-300 rounded-xl px-3 py-2" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£)</label>
+              <input required type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full border border-gray-300 rounded-xl px-3 py-2" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Link to Job</label>
+              <select value={jobId} onChange={e => setJobId(e.target.value)} className="w-full border border-gray-300 rounded-xl px-3 py-2">
+                <option value="">None</option>
+                {jobs.map(j => <option key={j.id} value={j.id}>{j.customerName}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setShowNewInvoice(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-xl">Create Invoice</button>
+          </div>
+        </form>
+      )}
 
       <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-100 shadow-sm mb-8">
         <div className="relative mb-6">
